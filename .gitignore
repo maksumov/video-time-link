@@ -11,3 +11,6 @@
 # Design sources
 assets/
 icon-1024.png
+
+# Build artifacts
+dist/
