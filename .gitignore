@@ -1,0 +1,9 @@
+# Chrome extension build artifacts
+*.pem
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
