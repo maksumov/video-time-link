@@ -1,0 +1,47 @@
+name: Build and Release Extension
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: tag
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Extract version from manifest.json (Node)
+        id: manifest
+        run: |
+          MANIFEST_VERSION=$(node -p "require('./manifest.json').version")
+          echo "manifest_version=$MANIFEST_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Verify tag matches manifest version
+        run: |
+          if [ "${{ steps.tag.outputs.version }}" != "${{ steps.manifest.outputs.manifest_version }}" ]; then
+            echo "Tag version and manifest version do not match!"
+            exit 1
+          fi
+
+      - name: Build extension
+        run: ./scripts/build.sh
+
+      - name: Create GitHub Release and upload artifact
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.tag.outputs.version }}
+          name: v${{ steps.tag.outputs.version }}
+          generate_release_notes: true
+          files: dist/video-time-link-${{ steps.tag.outputs.version }}.zip
